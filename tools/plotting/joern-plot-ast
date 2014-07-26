@@ -7,11 +7,19 @@ DESCRIPTION = """Retrieve the AST rooted at the node with the given
 id. The default output format is graphviz's 'dot'.
 """
 
+AST_NODE_COLOR = 'lightcoral'
+AST_EDGE_COLOR = 'lightcoral'
+
 class AST(JoernTool):
     
     def __init__(self):
         JoernTool.__init__(self, DESCRIPTION)
-    
+
+        self.argParser.add_argument('-a', '--attributes',
+                                    nargs = '+', type = str,
+                                    help = """Attributes shown in each node.""",
+                                    default = None)
+
     # @Override
     def processLine(self, line):
         nodeId = int(line)
@@ -38,26 +46,38 @@ class AST(JoernTool):
     def _createDotGraph(self, nodes, edges):
         G = pgv.AGraph()
         
-        idNodePairs = [(n._id, n) for n in nodes]
-        
-        for (nodeId, n) in idNodePairs:
-            G.add_node(nodeId)
-            node = G.get_node(nodeId)
-            node.attr['label'] = self._attributesAsString(n)
+        for node in nodes:
+            G.add_node(
+                    node._id,
+                    label = self._attributesAsString(node),
+                    style = 'filled',
+                    fontsize = 10,
+                    color = AST_NODE_COLOR)
 
-        srcDstPairs = [(e.start_node._id, e.end_node._id) for e in edges]
-        
-        for (startNode, endNode) in srcDstPairs:
-            G.add_edge(startNode, endNode)
+        for edge in edges:
+            G.add_edge(
+                    edge.start_node._id, edge.end_node._id,
+                    color = AST_EDGE_COLOR)
             
         return G
-    
+
     def _attributesAsString(self, n):
-        
-        properties = n.properties
-        return '\n'.join(['%s:%s' % (k, str(v).replace('\n',' '))
-                          for (k,v) in properties.iteritems()])
-        
+        properties = n.get_properties()
+        properties['id'] = n._id
+        valid_attributes = []
+        if self.args.attributes:
+            for a in self.args.attributes:
+                if a in properties:
+                    valid_attributes.append(a)
+
+            if not valid_attributes:
+                valid_attributes.append('id')
+
+            return '\\n'.join(['%s:%s' % (k, str(properties[k]).replace('\n',' ')) 
+                    for k in valid_attributes])
+        else:
+            return '\\n'.join(['%s:%s' % (k, str(properties[k]).replace('\n',' ')) 
+                    for k in properties.keys()])
 
     def _outputGraph(self, G, identifier):
         ENDMARKER = '//###'
