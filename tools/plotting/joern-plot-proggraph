@@ -8,6 +8,9 @@ id. The default output format is graphviz's 'dot'.
 """
 
 CFG_NODE_COLOR = 'lightblue'
+CFG_ENTRY_NODE_COLOR = 'lemonchiffon'
+CFG_EXIT_NODE_COLOR = 'lemonchiffon'
+CFG_ERROR_NODE_COLOR = 'lightcoral'
 CFG_EDGE_COLOR = 'lightblue'
 DDG_EDGE_COLOR = 'lightcoral'
 CDG_EDGE_COLOR = 'khaki'
@@ -143,11 +146,19 @@ class ProgramGraph(JoernTool):
     def _addCFGNodes(self, G, nodes):
 
         for node in nodes:
+            if node.get_properties()['type'] == 'CFGEntryNode':
+                color = CFG_ENTRY_NODE_COLOR
+            elif node.get_properties()['type'] == 'CFGExitNode':
+                color = CFG_EXIT_NODE_COLOR
+            elif node.get_properties()['type'] == 'CFGErrorNode':
+                color = CFG_ERROR_NODE_COLOR
+            else:
+                color = CFG_NODE_COLOR
             G.add_node(node._id,
                     label = self._attributesAsString(node),
                     style = 'filled',
                     fontsize = 10,
-                    color = CFG_NODE_COLOR)
+                    color = color)
 
     def _addSymbolNodes(self, G, nodes):
 
