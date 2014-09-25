@@ -49,6 +49,12 @@ class ProgramGraph(JoernTool):
                                     help = """Show control dependences.""",
                                     default = False)
 
+        self.argParser.add_argument('-pdg', '--program-dependence-graph',
+                                    action = 'store_true',
+                                    help = """Plot program dependence graph.
+                                    This is the same as '-ddg -cdg'""",
+                                    default = False)
+
         self.argParser.add_argument('-dom', '--show-dominance-edges',
                                     action = 'store_true',
                                     help = """Show dominance edges.""",
@@ -58,6 +64,7 @@ class ProgramGraph(JoernTool):
                                     action = 'store_true',
                                     help = """Show post-dominance edges.""",
                                     default = False)
+
         self.argParser.add_argument('-all', '--show-all',
                                     action = 'store_true',
                                     help = """Show all edge types""",
@@ -97,9 +104,9 @@ class ProgramGraph(JoernTool):
             self._addCFGEdges(G)
         if self.args.show_all or self.args.show_use_def_relations:
             self._addDefUseEdges(G)
-        if self.args.show_all or self.args.show_data_dependences:
+        if self.args.show_all or self.args.show_data_dependences or self.args.program_dependence_graph:
             self._addDDGEdges(G)
-        if self.args.show_all or self.args.show_control_dependences:
+        if self.args.show_all or self.args.show_control_dependences or self.args.program_dependence_graph:
             self._addCDGEdges(G)
         if self.args.show_all or self.args.show_dominance_edges:
             self._addDomEdges(G)
