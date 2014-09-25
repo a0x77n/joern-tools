@@ -34,9 +34,9 @@ class ProgramGraph(JoernTool):
                                     help = """Show control flow.""",
                                     default = False)
 
-        self.argParser.add_argument('-dfg', '--show-data-flow',
+        self.argParser.add_argument('-udg', '--show-use-def-relations',
                                     action = 'store_true',
-                                    help = """Show data flow.""",
+                                    help = """Show use- and def-relationships.""",
                                     default = False)
 
         self.argParser.add_argument('-ddg', '--show-data-dependences',
@@ -79,9 +79,6 @@ class ProgramGraph(JoernTool):
 
     def _getSymbolNodes(self):
 
-        if not self.args.show_data_flow and not self.args.show_all:
-            return []
-
         query = """queryNodeIndex('functionId:%s AND type:Symbol')""" % (self.function_id)
         return self._runGremlinQuery(query)
 
@@ -96,9 +93,9 @@ class ProgramGraph(JoernTool):
 
         self._addCFGNodes(G)
 
-        if self.args.show_all or self.args.show_control_flow:
+        if self.args.show_all or self.args.show_control_flow or self.args.show_use_def_relations:
             self._addCFGEdges(G)
-        if self.args.show_all or self.args.show_data_flow:
+        if self.args.show_all or self.args.show_use_def_relations:
             self._addDefUseEdges(G)
         if self.args.show_all or self.args.show_data_dependences:
             self._addDDGEdges(G)
