@@ -54,6 +54,10 @@ class ProgramGraph(JoernTool):
                                     help = """Show dominance edges.""",
                                     default = False)
 
+        self.argParser.add_argument('-pdom', '--show-post-dominance-edges',
+                                    action = 'store_true',
+                                    help = """Show post-dominance edges.""",
+                                    default = False)
         self.argParser.add_argument('-all', '--show-all',
                                     action = 'store_true',
                                     help = """Show all edge types""",
@@ -102,6 +106,8 @@ class ProgramGraph(JoernTool):
             self._addCDGEdges(G)
         if self.args.show_all or self.args.show_dominance_edges:
             self._addDomEdges(G)
+        if self.args.show_all or self.args.show_post_dominance_edges:
+            self._addPostDomEdges(G)
             
         return G
 
@@ -170,6 +176,11 @@ class ProgramGraph(JoernTool):
                     color = CDG_EDGE_COLOR)
 
     def _addDomEdges(self, G):
+
+        for edge in self._getEdges('DOM'):
+            G.add_edge(edge.start_node._id, edge.end_node._id)
+
+    def _addPostDomEdges(self, G):
 
         for edge in self._getEdges('POST_DOM'):
             G.add_edge(edge.start_node._id, edge.end_node._id)
