@@ -21,7 +21,7 @@ class LookupTool(TraversalTool):
                            nargs='+',
                            type=str,
                            help="""Attributes of interest""",
-                           default = None)
+                           default = [])
         group.add_argument('--no-transformation',
                            action = 'store_true',
                            default = False,
@@ -48,9 +48,6 @@ class LookupTool(TraversalTool):
     # @Override
     def queryFromLine(self, line):
         
-        if self.args.no_transformation:
-            return line
-        
         if line.startswith('id:') or self.args.node_id:
             node_id = line.split(':')[-1]
             query = 'g.v(%s)' % (node_id)
@@ -59,8 +56,11 @@ class LookupTool(TraversalTool):
         else:
             luceneQuery = line
             query = """queryNodeIndex('%s')""" % (luceneQuery)
-        
-        return self.addOutputTransformation(query)
+
+        if self.args.no_transformation:
+            return query
+        else:
+            return self.addOutputTransformation(query)
         
 
     def addOutputTransformation(self, query):
