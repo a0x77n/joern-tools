@@ -48,11 +48,12 @@ class KNN():
         # distance from one data point to all others
         
         if self.limit:
-            validNeighborIds = [funcId] + [x for x in self.limit if x != funcId]
+            validNeighborIds = [int(funcId)] + [x for x in self.limit if x != int(funcId)]
             validNeighbors = [self.emb.rTOC[str(x)] for x in validNeighborIds]
             
+            dataPointIndex = self.emb.rTOC[funcId]    
             X = self.emb.x[validNeighbors, :]            
-            D = 1.0 - (X * self.emb.x[0, :].T).todense()
+            D = 1.0 - (X * self.emb.x[dataPointIndex, :].T).todense()
             NNI = list(D[:,0].argsort(axis=0))[:self.k]
                         
             return [validNeighborIds[x] for x in NNI]
