@@ -12,7 +12,7 @@ switches.
 class PipeTool(CmdLineTool):
     
     def __init__(self, description):
-        CmdLineTool.__init__(self, description)
+        super(PipeTool, self).__init__(description)
         
         self.argParser.add_argument('-f', '--file', nargs='?',
                                     type = FileType('r'), default=sys.stdin,
