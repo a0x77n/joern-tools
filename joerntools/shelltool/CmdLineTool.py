@@ -1,7 +1,7 @@
 
 from argparse import ArgumentParser
 
-class CmdLineTool:
+class CmdLineTool(object):\
     
     def __init__(self, description):
         self.description = description

@@ -10,38 +10,57 @@ class LookupTool(TraversalTool):
     def __init__(self, DESCRIPTION):
         TraversalTool.__init__(self, DESCRIPTION)
         
-        self.argParser.add_argument('-c', '--complete',
-                                    action='store_true',
-                                    default=False,
-                                    help = """ Output the complete
-                                    node, not just its ID.""")
-        
-        self.argParser.add_argument('-g', '--gremlin',
-                                    action='store_true',
-                                    default=False, help = """query is
-                                    a gremlin traversal as opposed to a lucene
-                                    query""")
+        group = self.argParser.add_mutually_exclusive_group()
+
+        group.add_argument('-c', '--complete',
+                           action='store_true',
+                           default=False,
+                           help = """Output the complete node,
+                           not just its ID.""")
+        group.add_argument('-a', '--attributes',
+                           nargs='+',
+                           type=str,
+                           help="""Attributes of interest""",
+                           default = [])
+        group.add_argument('--no-transformation',
+                           action = 'store_true',
+                           default = False,
+                           help = """Raw output""")
+                           
+        group = self.argParser.add_mutually_exclusive_group()
+        group.add_argument('-l', '--lucene-query',
+                           action='store_true',
+                           default=True,
+                           help = """query is treated as a lucene query""")
+        group.add_argument('-g', '--gremlin',
+                           action='store_true',
+                           default=False,
+                           help = """query is a gremlin traversal as opposed
+                           to a lucene query""")
+        group.add_argument('-n', '--node-id',
+                           action='store_true',
+                           default=False,
+                           help = """query is treated as a node id""")
 
         
-        self.argParser.add_argument('-a', '--attributes',
-                                    nargs='+', type = str,
-                                    help="""Attributes of interest""",
-                                    default = [])
+
 
     # @Override
     def queryFromLine(self, line):
         
-        if self.args.gremlin:
-            return line
-        
-        luceneQuery = line
-        if luceneQuery.startswith('id:'):
-            id = luceneQuery.split(':')[1]
-            query = 'g.v(%s)' % (id)
+        if line.startswith('id:') or self.args.node_id:
+            node_id = line.split(':')[-1]
+            query = 'g.v(%s)' % (node_id)
+        elif self.args.gremlin:
+            query = line
         else:
+            luceneQuery = line
             query = """queryNodeIndex('%s')""" % (luceneQuery)
-        
-        return self.addOutputTransformation(query)
+
+        if self.args.no_transformation:
+            return query
+        else:
+            return self.addOutputTransformation(query)
         
 
     def addOutputTransformation(self, query):
@@ -52,19 +71,14 @@ class LookupTool(TraversalTool):
 
         if self.args.complete:
             return query + '.transform{ [it.id, it]}'
-        elif self.args.attributes != []:
-            term = '.transform{ [it.id, ['
-            for attr in self.args.attributes:
-                term += 'it.%s,' % (attr)
-            term = term[:-1]
-            term += ']]}'
-            return query + term
         else:
-            return query + '.transform{[it.id, []]}'
+            term = '.transform{{ [it.id, [{}]]}}'
+            attr = ','.join(map(lambda x: 'it.{}'.format(x), self.args.attributes))
+            term = term.format(attr)
+            return query + term
     
 
     # @Override
-
     def outputResult(self, result):
         for r in result:
             self._outputRecord(r)
@@ -72,8 +86,9 @@ class LookupTool(TraversalTool):
     
     def _outputRecord(self, record):
         
-        if self.args.gremlin:
-            self.output(str(record) + '\n')
+        if self.args.no_transformation:
+            self.output(str(record))
+            self.output('\n')
             return
 
         id, node = record
@@ -89,6 +104,9 @@ class LookupTool(TraversalTool):
         
         keyValPairs = [k.replace('\t', '') for k in keyValPairs]
         
-        self.output('%s\t%s\n' % (id, '\t'.join(keyValPairs)))
-    
-    
+        self.output(str(id))
+        if keyValPairs:
+            self.output('\t%s\n' % ('\t'.join(keyValPairs)))
+        else:
+            self.output('\n')
+
